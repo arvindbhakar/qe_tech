@@ -1,0 +1,12 @@
+.env/
+.vscode/
+*.pyc
+*.log
+.idea/
+output/
+archive/
+*.json
+*.html
+screenshots/
+
+
