@@ -1,3 +1,5 @@
+import os
+
 from behave import *
 import pandas as pd
 
@@ -6,7 +8,8 @@ from utils.csv_util import verify_csv_headers, check_primary_key
 
 @given("the CSV file '{csv_file_path}'")
 def step_impl(context, csv_file_path):
-    context.csv_file_path = csv_file_path
+    file_path = os.path.abspath(csv_file_path)
+    context.csv_file_path = file_path
 
 
 @when("I verify the headers")
@@ -31,13 +34,13 @@ def verify_primary_key_constraint(context):
     assert context.is_primary_key, "The column is not a primary key"
 
 
-@given('the primary key column "{column}" in the CSV file "{file}"')
+@given("the primary key column '{column}' in the CSV file '{file}'")
 def step_impl(context, column, file):
     context.primary_key = column
     context.df1 = pd.read_csv(file)
 
 
-@given('the secondary key column "{column}" in the CSV file "{file}"')
+@given("the secondary key column '{column}' in the CSV file '{file}'")
 def step_impl(context, column, file):
     context.secondary_key = column
     context.df2 = pd.read_csv(file)

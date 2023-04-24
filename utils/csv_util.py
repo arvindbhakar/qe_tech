@@ -7,6 +7,11 @@ def verify_csv_headers(csv_file_path, expected_headers):
     """
     df = pd.read_csv(csv_file_path)
     actual_headers = list(df.columns)
+    print("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK")
+    print(actual_headers)
+    print(expected_headers)
+
+
     if actual_headers != expected_headers:
         return False
     return True
