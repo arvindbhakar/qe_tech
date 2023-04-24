@@ -34,34 +34,40 @@ def verify_primary_key_constraint(context):
     assert context.is_primary_key, "The column is not a primary key"
 
 
-@given("the primary key column '{column}' in the CSV file '{file}'")
-def step_impl(context, column, file):
-    context.primary_key = column
-    context.df1 = pd.read_csv(file)
+@given('the instrument details are stored in "{filename}"')
+def step_impl(context, filename):
+    context.instrument_df = pd.read_csv(filename)
 
 
-@given("the secondary key column '{column}' in the CSV file '{file}'")
-def step_impl(context, column, file):
-    context.secondary_key = column
-    context.df2 = pd.read_csv(file)
+@given('the position details are stored in "{filename}"')
+def step_impl(context, filename):
+    context.position_df = pd.read_csv(filename)
 
 
-@when('I verify the primary and secondary key constraints')
+@given('the position report is stored in "{filename}"')
+def step_impl(context, filename):
+    context.position_report_df = pd.read_csv(filename)
+
+
+@when('I verify the content of the position report CSV file')
 def step_impl(context):
-    assert context.primary_key in context.df1.columns, f"{context.primary_key} is not in {context.df1.columns}"
-    # Check if the secondary key column exists in the DataFrame
-    assert context.secondary_key in context.df2.columns, f"{context.secondary_key} is not in {context.df2.columns}"
-    # Check if there are any duplicate primary key values in the DataFrame
-    assert not context.df1.duplicated(
-        subset=context.primary_key).any(), f"Duplicate {context.primary_key} values found in file1.csv"
-    # Check if there are any duplicate secondary key values in the DataFrame
-    assert not context.df2.duplicated(
-        subset=context.secondary_key).any(), f"Duplicate {context.secondary_key} values found in file2.csv"
+    merged_df = pd.merge(context.instrument_df, context.position_df, left_on='ID', right_on='InstrumentID')
+    merged_df = merged_df.rename(columns={'ID_y': 'PositionID'})
+    print("merged pf")
+    print(merged_df)
+    #final_df = pd.merge(merged_df, context.position_report_df, left_on='InstrumentID', right_on='ISIN')
+    final_df = pd.merge(merged_df, context.position_report_df, left_on='PositionID', right_on='PositionID')
+    print("final_df pf")
+    print(final_df)
+    final_df['Calculated Total Price'] = merged_df['Quantity'] * merged_df['Unit Price']
+    print("final_df['Calculated Total Price'")
+    print(final_df['Calculated Total Price'])
+    print("final_df['Total Price']")
+    print(final_df['Total Price'])
+    final_df['Total Price Matches'] = final_df['Total Price'] == final_df['Calculated Total Price']
+    context.final_df = final_df
 
 
-@then('the data in the CSV files should be consistent')
+@then('the position report CSV file should match the instrument and position details')
 def step_impl(context):
-    # Merge the two DataFrames on the primary and secondary key columns
-    merged_df = pd.merge(context.df1, context.df2, on=[context.primary_key, context.secondary_key], how='outer')
-    # Check if any rows are missing from the merged DataFrame
-    assert merged_df.notnull().all().all(), "Data is inconsistent between the CSV files"
+    assert context.final_df['Total Price Matches'].all()
